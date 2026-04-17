@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Maths Content QC Tool</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#ffffff; --bg2:#f6f6f4; --bg3:#f0efe9;
+      --text:#1a1a18; --text2:#6b6b66; --text3:#9e9e99;
+      --border:rgba(0,0,0,0.11); --border2:rgba(0,0,0,0.22);
+      --radius-md:8px; --radius-lg:12px;
+      --green-bg:#EAF3DE; --green-text:#3B6D11; --green-bar:#639922;
+      --amber-bg:#FAEEDA; --amber-text:#854F0B; --amber-bar:#BA7517;
+      --red-bg:#FCEBEB;   --red-text:#A32D2D;   --red-bar:#E24B4A;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:#1e1e1c; --bg2:#2a2a28; --bg3:#252523;
+        --text:#f0efe9; --text2:#a8a8a2; --text3:#6b6b66;
+        --border:rgba(255,255,255,0.09); --border2:rgba(255,255,255,0.18);
+        --green-bg:#173404; --green-text:#C0DD97; --green-bar:#97C459;
+        --amber-bg:#412402; --amber-text:#FAC775; --amber-bar:#EF9F27;
+        --red-bg:#501313;   --red-text:#F7C1C1;   --red-bar:#E24B4A;
+      }
+    }
+    body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg3); color:var(--text); min-height:100vh; padding:2rem 1rem 4rem; }
+    .container { max-width:780px; margin:0 auto; }
+    .page-header { margin-bottom:2rem; }
+    .page-header h1 { font-size:22px; font-weight:500; }
+    .page-header p  { font-size:13px; color:var(--text2); margin-top:5px; line-height:1.6; }
+
+    .upload-zone { border:1.5px dashed var(--border2); border-radius:var(--radius-lg); padding:2rem; text-align:center; cursor:pointer; background:var(--bg); transition:background 0.15s; margin-bottom:1rem; }
+    .upload-zone:hover { background:var(--bg2); }
+    .upload-zone input { display:none; }
+    .upload-icon { font-size:28px; margin-bottom:8px; }
+    .upload-zone p { font-size:14px; color:var(--text2); }
+    .upload-zone span { font-size:12px; color:var(--text3); }
+
+    .file-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border:0.5px solid var(--border); border-radius:var(--radius-md); margin-bottom:6px; background:var(--bg); }
+    .dot { width:8px; height:8px; border-radius:50%; background:#B4B2A9; flex-shrink:0; }
+    .dot.done  { background:#1D9E75; }
+    .dot.error { background:#E24B4A; }
+    .dot.busy  { background:#EF9F27; animation:pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    .fname   { font-size:13px; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .fstatus { font-size:11px; color:var(--text3); white-space:nowrap; }
+
+    .run-btn { width:100%; padding:11px; font-size:14px; font-weight:500; background:var(--text); color:var(--bg); border:none; border-radius:var(--radius-md); cursor:pointer; transition:opacity 0.15s; margin-top:4px; }
+    .run-btn:disabled { opacity:0.3; cursor:not-allowed; }
+    .run-btn:not(:disabled):hover { opacity:0.85; }
+
+    .progress-wrap { margin:1rem 0; }
+    .progress-label { font-size:12px; color:var(--text2); margin-bottom:6px; }
+    .progress-bar   { height:4px; background:var(--border); border-radius:2px; }
+    .progress-fill  { height:100%; background:var(--text); border-radius:2px; transition:width 0.4s; }
+
+    .summary-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:1rem 0; }
+    .stat { background:var(--bg2); border-radius:var(--radius-md); padding:12px; text-align:center; }
+    .stat-label { font-size:11px; color:var(--text2); margin-bottom:4px; }
+    .stat-val   { font-size:22px; font-weight:500; }
+
+    .result-card { border:0.5px solid var(--border); border-radius:var(--radius-lg); background:var(--bg); overflow:hidden; margin-bottom:10px; }
+    .result-header { display:flex; align-items:center; gap:10px; padding:12px 14px; cursor:pointer; }
+    .result-header:hover { background:var(--bg2); }
+    .result-title { font-size:13px; font-weight:500; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .overall-pill { font-size:12px; font-weight:600; padding:4px 12px; border-radius:99px; flex-shrink:0; }
+    .pill-high { background:var(--green-bg); color:var(--green-text); }
+    .pill-mid  { background:var(--amber-bg); color:var(--amber-text); }
+    .pill-low  { background:var(--red-bg);   color:var(--red-text); }
+    .chevron   { font-size:10px; color:var(--text3); transition:transform 0.2s; flex-shrink:0; }
+    .chevron.open { transform:rotate(180deg); }
+
+    .result-body { border-top:0.5px solid var(--border); padding:14px 16px; display:none; }
+    .result-body.open { display:block; }
+    .summary-text { font-size:12px; color:var(--text2); margin-bottom:14px; line-height:1.6; }
+
+    .param-row { display:flex; align-items:center; gap:12px; padding:8px 10px; border-radius:var(--radius-md); margin-bottom:2px; }
+    .param-row[data-level="high"] { background:var(--green-bg); }
+    .param-row[data-level="mid"]  { background:var(--amber-bg); }
+    .param-row[data-level="low"]  { background:var(--red-bg); }
+    .param-name { font-size:12px; font-weight:500; width:110px; flex-shrink:0; }
+    .param-row[data-level="high"] .param-name { color:var(--green-text); }
+    .param-row[data-level="mid"]  .param-name { color:var(--amber-text); }
+    .param-row[data-level="low"]  .param-name { color:var(--red-text); }
+    .score-badge { font-size:13px; font-weight:700; width:38px; text-align:center; flex-shrink:0; }
+    .param-row[data-level="high"] .score-badge { color:var(--green-text); }
+    .param-row[data-level="mid"]  .score-badge { color:var(--amber-text); }
+    .param-row[data-level="low"]  .score-badge { color:var(--red-text); }
+    .bar-wrap { flex:1; height:6px; background:rgba(0,0,0,0.08); border-radius:3px; }
+    .bar-fill  { height:100%; border-radius:3px; transition:width 0.5s; }
+    .param-row[data-level="high"] .bar-fill { background:var(--green-bar); }
+    .param-row[data-level="mid"]  .bar-fill { background:var(--amber-bar); }
+    .param-row[data-level="low"]  .bar-fill { background:var(--red-bar); }
+
+    .issues { display:flex; flex-wrap:wrap; gap:4px; padding:5px 10px 10px 10px; }
+    .tag { font-size:11px; padding:2px 8px; border-radius:var(--radius-md); line-height:1.5; }
+    .tag-ok   { background:var(--green-bg); color:var(--green-text); }
+    .tag-warn { background:var(--amber-bg); color:var(--amber-text); }
+    .tag-err  { background:var(--red-bg);   color:var(--red-text); }
+
+    .dl-btn { width:100%; padding:9px; font-size:13px; font-weight:500; background:var(--text); color:var(--bg); border:none; border-radius:var(--radius-md); cursor:pointer; margin-top:14px; display:flex; align-items:center; justify-content:center; gap:6px; transition:opacity 0.15s; }
+    .dl-btn:hover:not(:disabled) { opacity:0.85; }
+    .dl-btn:disabled { opacity:0.35; cursor:not-allowed; }
+
+    .empty { text-align:center; padding:2.5rem; color:var(--text3); font-size:13px; }
+    .toast { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%); background:var(--text); color:var(--bg); font-size:13px; padding:9px 20px; border-radius:99px; opacity:0; transition:opacity 0.3s; pointer-events:none; white-space:nowrap; z-index:999; }
+    .toast.show { opacity:1; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="page-header">
+    <h1>Maths content QC tool</h1>
+    <p>Upload up to 15 DOCX files. Claude scores each file across Grammar, Facts, and User Intent — then downloads an annotated copy with highlights and margin comments.</p>
+  </div>
+
+  <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+    <input type="file" id="fileInput" accept=".docx" multiple />
+    <div class="upload-icon">📄</div>
+    <p>Click or drag DOCX files here</p>
+    <span>Up to 15 files · .docx only</span>
+  </div>
+
+  <div id="fileList"></div>
+  <button class="run-btn" id="runBtn" disabled onclick="runQC()">Run QC on all files</button>
+
+  <div id="progressWrap" class="progress-wrap" style="display:none;">
+    <div class="progress-label" id="progressLabel">Analysing…</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <div class="summary-grid" id="summaryGrid" style="display:none;">
+    <div class="stat"><div class="stat-label">Files checked</div><div class="stat-val" id="sTotal">0</div></div>
+    <div class="stat"><div class="stat-label">Avg score</div><div class="stat-val" id="sAvg">—</div></div>
+    <div class="stat"><div class="stat-label">Issues found</div><div class="stat-val" id="sIssues">0</div></div>
+  </div>
+
+  <div id="results"></div>
+  <div class="empty" id="emptyState">Upload DOCX files to begin</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const API_KEY = 'YOUR_ANTHROPIC_API_KEY_HERE';
+const PARAMS  = ['Grammar', 'Facts', 'User Intent'];
+let files = [], qcResults = [];
+
+const fileInput = document.getElementById('fileInput');
+const dropZone  = document.getElementById('dropZone');
+fileInput.addEventListener('change', e => loadFiles(Array.from(e.target.files)));
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.style.background='var(--bg2)'; });
+dropZone.addEventListener('dragleave', ()  => { dropZone.style.background=''; });
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.style.background=''; loadFiles(Array.from(e.dataTransfer.files)); });
+
+function loadFiles(selected) {
+  files = selected.filter(f => f.name.endsWith('.docx')).slice(0, 15);
+  qcResults = [];
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('summaryGrid').style.display = 'none';
+  document.getElementById('emptyState').style.display = files.length ? 'none' : 'block';
+  renderFileList();
+  document.getElementById('runBtn').disabled = files.length === 0;
+}
+
+function renderFileList() {
+  const el = document.getElementById('fileList');
+  el.innerHTML = '';
+  files.forEach((f, i) => {
+    el.innerHTML += `<div class="file-item" id="fi-${i}">
+      <div class="dot" id="dot-${i}"></div>
+      <span class="fname">${f.name}</span>
+      <span class="fstatus" id="fst-${i}">Ready</span>
+    </div>`;
+  });
+}
+
+function setFileState(i, state, label) {
+  const d = document.getElementById('dot-' + i);
+  const s = document.getElementById('fst-' + i);
+  if (d) d.className = 'dot ' + state;
+  if (s) s.textContent = label;
+}
+
+function scoreLevel(s) { return s >= 80 ? 'high' : s >= 55 ? 'mid' : 'low'; }
+function pillClass(s)  { return 'pill-' + scoreLevel(s); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+async function readDocx(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = async e => {
+      try {
+        const { value } = await mammoth.extractRawText({ arrayBuffer: e.target.result });
+        resolve(value.slice(0, 3000));
+      } catch(err) { reject(err); }
+    };
+    r.readAsArrayBuffer(file);
+  });
+}
+
+async function callClaude(prompt) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': API_KEY,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || 'API error ' + res.status);
+  }
+  const data = await res.json();
+  return data.content.map(b => b.text || '').join('').replace(/```json|```/g, '').trim();
+}
+
+async function analyseFile(text, filename) {
+  const prompt = `You are a strict QC reviewer for maths educational content pages.
+Filename: "${filename}"
+Content (first 3000 chars):
+${text}
+
+Respond ONLY with valid JSON — no markdown, no preamble:
+{
+  "overallScore": <0-100>,
+  "params": {
+    "Grammar":     { "score": <0-100>, "issues": ["<12 word issue>"] },
+    "Facts":       { "score": <0-100>, "issues": ["<12 word issue>"] },
+    "User Intent": { "score": <0-100>, "issues": ["<12 word issue>"] }
+  },
+  "summary": "One sentence overall verdict."
+}
+Scoring: 90-100=no issues, 70-89=minor, 50-69=moderate, <50=major.
+Grammar: flag subject-verb disagreement, tense errors, punctuation mistakes.
+Facts: flag incorrect formulas, wrong theorems, numerical errors, wrong definitions.
+User Intent: check ALL of the following —
+  1. Does the document title/heading clearly match the maths topic being taught?
+  2. Does the difficulty level match what the title implies?
+  3. Are the right keywords present that a student searching this topic would expect?
+  4. Does the conclusion/summary align with what the title promised to teach?
+Keep each issue under 12 words. Empty array if no issues.`;
+  return JSON.parse(await callClaude(prompt));
+}
+
+async function runQC() {
+  if (!files.length) return;
+  document.getElementById('runBtn').disabled = true;
+  document.getElementById('runBtn').textContent = 'Running QC…';
+  qcResults = [];
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('summaryGrid').style.display = 'none';
+  document.getElementById('progressWrap').style.display = 'block';
+  document.getElementById('emptyState').style.display = 'none';
+
+  let totalScore = 0, totalIssues = 0;
+
+  for (let i = 0; i < files.length; i++) {
+    setFileState(i, 'busy', 'Analysing…');
+    document.getElementById('progressLabel').textContent = `Analysing ${i + 1} of ${files.length}`;
+    document.getElementById('progressFill').style.width = Math.round((i / files.length) * 100) + '%';
+    try {
+      const text   = await readDocx(files[i]);
+      const result = await analyseFile(text, files[i].name);
+      qcResults.push({ file: files[i], result, text });
+      setFileState(i, 'done', 'Done ✓');
+      totalScore += result.overallScore;
+      PARAMS.forEach(p => { totalIssues += (result.params[p]?.issues?.length || 0); });
+      renderResultCard(files[i].name, result, qcResults.length - 1);
+    } catch(err) {
+      qcResults.push({ file: files[i], result: null, text: '' });
+      setFileState(i, 'error', 'Error');
+      renderErrorCard(files[i].name);
+      console.error(err);
+    }
+  }
+
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('progressLabel').textContent = `Done — ${files.length} file(s) reviewed`;
+  const done = qcResults.filter(r => r.result).length;
+  document.getElementById('sTotal').textContent  = done;
+  document.getElementById('sAvg').textContent    = done ? Math.round(totalScore / done) + '%' : '—';
+  document.getElementById('sIssues').textContent = totalIssues;
+  document.getElementById('summaryGrid').style.display = 'grid';
+  document.getElementById('runBtn').disabled = false;
+  document.getElementById('runBtn').textContent = 'Re-run QC';
+}
+
+function renderResultCard(name, result, idx) {
+  const sc = result.overallScore;
+  let paramsHtml = '';
+  PARAMS.forEach(p => {
+    const pd    = result.params[p] || { score: 0, issues: [] };
+    const level = scoreLevel(pd.score);
+    const tagCls = pd.issues.length === 0 ? 'tag-ok' : level === 'high' ? 'tag-warn' : 'tag-err';
+    const issuesHtml = pd.issues.length
+      ? pd.issues.map(iss => `<span class="tag ${tagCls}">${iss}</span>`).join('')
+      : `<span class="tag tag-ok">No issues</span>`;
+    paramsHtml += `
+      <div class="param-row" data-level="${level}">
+        <span class="param-name">${p}</span>
+        <span class="score-badge">${pd.score}</span>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${pd.score}%"></div></div>
+      </div>
+      <div class="issues">${issuesHtml}</div>`;
+  });
+
+  const card = document.createElement('div');
+  card.className = 'result-card';
+  card.innerHTML = `
+    <div class="result-header" onclick="toggleCard(${idx})">
+      <span class="result-title">${name}</span>
+      <span class="overall-pill ${pillClass(sc)}">${sc}/100</span>
+      <span class="chevron" id="chev-${idx}">▼</span>
+    </div>
+    <div class="result-body" id="body-${idx}">
+      <p class="summary-text">${result.summary || ''}</p>
+      ${paramsHtml}
+      <button class="dl-btn" id="dlbtn-${idx}" onclick="downloadAnnotated(${idx})">
+        ⬇ Download annotated DOCX
+      </button>
+    </div>`;
+  document.getElementById('results').appendChild(card);
+}
+
+function renderErrorCard(name) {
+  const card = document.createElement('div');
+  card.className = 'result-card';
+  card.innerHTML = `<div class="result-header"><span class="result-title">${name}</span><span class="overall-pill pill-low">Error</span></div>`;
+  document.getElementById('results').appendChild(card);
+}
+
+function toggleCard(idx) {
+  document.getElementById('body-' + idx)?.classList.toggle('open');
+  document.getElementById('chev-' + idx)?.classList.toggle('open');
+}
+
+async function downloadAnnotated(idx) {
+  const btn = document.getElementById('dlbtn-' + idx);
+  btn.disabled = true; btn.textContent = 'Generating annotated DOCX…';
+
+  const { file, result, text } = qcResults[idx];
+
+  try {
+    const commentPrompt = `You are a QC editor for maths educational content. Document: "${file.name}".
+QC analysis:
+${JSON.stringify(result, null, 2)}
+Document text (first 2500 chars):
+${text.slice(0, 2500)}
+Generate specific inline comments. Respond ONLY with JSON:
+{
+  "comments": [
+    { "anchor": "exact verbatim phrase from doc, max 8 words", "comment": "QC note max 20 words", "category": "Grammar|Facts|User Intent", "severity": "warn|error" }
+  ]
+}
+3-8 comments. Anchor must be a verbatim substring from the text above. Only flag real issues.`;
+
+    const cJson = await callClaude(commentPrompt);
+    const { comments } = JSON.parse(cJson);
+
+    const arr = await file.arrayBuffer();
+    const zip = await JSZip.loadAsync(arr);
+    let docXml = await zip.file('word/document.xml').async('string');
+
+    const summaryLines = PARAMS.map(p => {
+      const pd = result.params[p];
+      return `${p}: ${pd.score}/100 — ${pd.issues.join('; ') || 'No issues'}`;
+    }).join('\n');
+    const fullSummary = `QC REPORT — ${file.name}\nOverall: ${result.overallScore}/100\n\n${summaryLines}\n\nVerdict: ${result.summary}`;
+
+    comments.forEach((c, ci) => {
+      const escaped = c.anchor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp(escaped);
+      if (!re.test(docXml)) return;
+      const hlVal = c.severity === 'error' ? 'red' : 'yellow';
+      const replacement =
+        `<w:commentRangeStart w:id="${100 + ci}"/>` +
+        `<w:r><w:rPr><w:highlight w:val="${hlVal}"/></w:rPr>` +
+        `<w:t xml:space="preserve">${c.anchor}</w:t></w:r>` +
+        `<w:commentRangeEnd w:id="${100 + ci}"/>` +
+        `<w:r><w:rPr><w:rStyle w:val="CommentReference"/></w:rPr>` +
+        `<w:commentReference w:id="${100 + ci}"/></w:r>`;
+      docXml = docXml.replace(re, replacement);
+    });
+    zip.file('word/document.xml', docXml);
+
+    const commentNodes = comments.map((c, ci) =>
+      `<w:comment w:id="${100 + ci}" w:author="Claude QC" w:date="2026-04-17T00:00:00Z">` +
+      `<w:p><w:r><w:t xml:space="preserve">[${c.category}] ${c.comment}</w:t></w:r></w:p></w:comment>`
+    ).join('');
+    const summaryNode =
+      `<w:comment w:id="999" w:author="Claude QC" w:date="2026-04-17T00:00:00Z">` +
+      `<w:p><w:r><w:t xml:space="preserve">${fullSummary.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</w:t></w:r></w:p></w:comment>`;
+
+    let commentsXml = zip.file('word/comments.xml')
+      ? await zip.file('word/comments.xml').async('string')
+      : `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:comments xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"></w:comments>`;
+    commentsXml = commentsXml.replace('</w:comments>', commentNodes + summaryNode + '</w:comments>');
+    zip.file('word/comments.xml', commentsXml);
+
+    let relsXml = await zip.file('word/_rels/document.xml.rels').async('string');
+    if (!relsXml.includes('comments.xml')) {
+      relsXml = relsXml.replace('</Relationships>',
+        '<Relationship Id="rIdQC" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments" Target="comments.xml"/></Relationships>');
+      zip.file('word/_rels/document.xml.rels', relsXml);
+    }
+
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = file.name.replace('.docx', '_QC.docx');
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    btn.textContent = '⬇ Download again';
+    btn.disabled = false;
+    showToast('Annotated DOCX downloaded!');
+
+  } catch(err) {
+    console.error(err);
+    btn.textContent = '⬇ Download annotated DOCX';
+    btn.disabled = false;
+    showToast('Error: ' + err.message);
+  }
+}
+</script>
+</body>
+</html>

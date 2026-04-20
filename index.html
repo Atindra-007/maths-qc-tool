@@ -415,13 +415,19 @@ QC analysis:
 ${JSON.stringify(result, null, 2)}
 Document text (first 2500 chars):
 ${text.slice(0, 2500)}
-Generate specific inline comments. Respond ONLY with JSON:
+Generate specific inline comments WITH suggested fixes for the content writer. Respond ONLY with JSON:
 {
   "comments": [
-    { "anchor": "exact verbatim phrase from doc, max 8 words", "comment": "QC note max 20 words", "category": "Grammar|Facts|User Intent", "severity": "warn|error" }
+    { "anchor": "exact verbatim phrase from doc, max 8 words", "comment": "Issue description. Suggested fix: <what the writer should change it to>", "category": "Grammar|Facts|User Intent", "severity": "warn|error" }
   ]
 }
-3-8 comments. Anchor must be a verbatim substring from the text above. Only flag real issues.`;
+Rules:
+- 3-8 comments only.
+- Anchor must be a verbatim substring from the text above.
+- Every comment MUST include a clear suggested fix so the writer knows exactly what to change.
+- Format: "Issue description. Suggested fix: <correction>"
+- Example: "Incorrect formula used. Suggested fix: Replace 'a2+b2' with 'a²+b²=c²'"
+- Only flag real issues found in the QC analysis.`;
 
     const cRaw = await callClaude(commentPrompt);
     const { comments } = JSON.parse(cRaw);

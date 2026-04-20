@@ -143,7 +143,17 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const API_KEY = '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';
+// ── API KEY — loaded from sessionStorage, never hardcoded ──────
+let API_KEY = sessionStorage.getItem('qc_api_key') || '';
+if (!API_KEY) {
+  const key = prompt('Enter your Anthropic API key to continue:\n(It will be remembered for this tab session only)');
+  if (key && key.trim().startsWith('sk-')) {
+    API_KEY = key.trim();
+    sessionStorage.setItem('qc_api_key', API_KEY);
+  } else if (key) {
+    alert('That doesn\'t look like a valid Anthropic API key (should start with "sk-"). Please refresh and try again.');
+  }
+}
 const PARAMS  = ['Grammar', 'Facts', 'User Intent'];
 let files = [], qcResults = [];
 

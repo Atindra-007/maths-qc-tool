@@ -442,20 +442,20 @@ Rules:
     }).join('\n');
     const fullSummary = `QC REPORT — ${file.name}\nOverall: ${result.overallScore}/100\n\n${summaryLines}\n\nVerdict: ${result.summary}`;
 
-    comments.forEach((c, ci) => {
-      const escaped = c.anchor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const re = new RegExp(escaped);
-      if (!re.test(docXml)) return;
-      const hlVal = c.severity === 'error' ? 'red' : 'yellow';
-      const replacement =
-        `<w:commentRangeStart w:id="${100 + ci}"/>` +
-        `<w:r><w:rPr><w:highlight w:val="${hlVal}"/></w:rPr>` +
-        `<w:t xml:space="preserve">${c.anchor}</w:t></w:r>` +
-        `<w:commentRangeEnd w:id="${100 + ci}"/>` +
-        `<w:r><w:rPr><w:rStyle w:val="CommentReference"/></w:rPr>` +
-        `<w:commentReference w:id="${100 + ci}"/></w:r>`;
-      docXml = docXml.replace(re, replacement);
-    });
+    // Attach comments to the end of the first paragraph in the doc.
+    // We do NOT replace any text runs — that corrupts split runs in DOCX XML.
+    // Instead we append comment markers after the first paragraph close tag.
+    const commentMarkers = comments.map((c, ci) =>
+      `<w:p>` +
+      `<w:commentRangeStart w:id="${100 + ci}"/>` +
+      `<w:r><w:t xml:space="preserve"> </w:t></w:r>` +
+      `<w:commentRangeEnd w:id="${100 + ci}"/>` +
+      `<w:r><w:rPr><w:rStyle w:val="CommentReference"/></w:rPr><w:commentReference w:id="${100 + ci}"/></w:r>` +
+      `</w:p>`
+    ).join('');
+
+    // Insert markers just before closing </w:body>
+    docXml = docXml.replace('</w:body>', commentMarkers + '</w:body>');
     zip.file('word/document.xml', docXml);
 
     const commentNodes = comments.map((c, ci) =>

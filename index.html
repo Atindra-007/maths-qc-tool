@@ -9,39 +9,31 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg:#ffffff; --bg2:#f6f6f4; --bg3:#f0efe9;
-      --text:#1a1a18; --text2:#6b6b66; --text3:#9e9e99;
-      --border:rgba(0,0,0,0.11); --border2:rgba(0,0,0,0.22);
+      --bg:#f5f5f3; --bg2:#ffffff; --bg3:#eeecea;
+      --text:#1a1a1a; --text2:#6b6b66; --text3:#aaa;
+      --border:#e8e8e6; --border2:#d0d0cc;
       --radius-md:8px; --radius-lg:12px;
       --green-bg:#EAF3DE; --green-text:#3B6D11; --green-bar:#639922;
       --amber-bg:#FAEEDA; --amber-text:#854F0B; --amber-bar:#BA7517;
       --red-bg:#FCEBEB;   --red-text:#A32D2D;   --red-bar:#E24B4A;
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg:#1e1e1c; --bg2:#2a2a28; --bg3:#252523;
-        --text:#f0efe9; --text2:#a8a8a2; --text3:#6b6b66;
-        --border:rgba(255,255,255,0.09); --border2:rgba(255,255,255,0.18);
-        --green-bg:#173404; --green-text:#C0DD97; --green-bar:#97C459;
-        --amber-bg:#412402; --amber-text:#FAC775; --amber-bar:#EF9F27;
-        --red-bg:#501313;   --red-text:#F7C1C1;   --red-bar:#E24B4A;
-      }
-    }
-    body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg3); color:var(--text); min-height:100vh; padding:2rem 1rem 4rem; }
+
+    body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding:2rem 1rem 4rem; }
     .container { max-width:780px; margin:0 auto; }
+
     .page-header { margin-bottom:2rem; }
-    .page-header h1 { font-size:22px; font-weight:500; }
+    .page-header h1 { font-size:22px; font-weight:600; }
     .page-header p  { font-size:13px; color:var(--text2); margin-top:5px; line-height:1.6; }
 
-    .upload-zone { border:1.5px dashed var(--border2); border-radius:var(--radius-lg); padding:2rem; text-align:center; cursor:pointer; background:var(--bg); transition:background 0.15s; margin-bottom:1rem; }
-    .upload-zone:hover { background:var(--bg2); }
+    .upload-zone { border:1.5px dashed var(--border2); border-radius:var(--radius-lg); padding:2rem; text-align:center; cursor:pointer; background:var(--bg2); transition:background 0.15s; margin-bottom:1rem; }
+    .upload-zone:hover { background:var(--bg3); }
     .upload-zone input { display:none; }
     .upload-icon { font-size:28px; margin-bottom:8px; }
     .upload-zone p { font-size:14px; color:var(--text2); }
     .upload-zone span { font-size:12px; color:var(--text3); }
 
-    .file-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border:0.5px solid var(--border); border-radius:var(--radius-md); margin-bottom:6px; background:var(--bg); }
-    .dot { width:8px; height:8px; border-radius:50%; background:#B4B2A9; flex-shrink:0; }
+    .file-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border:1px solid var(--border); border-radius:var(--radius-md); margin-bottom:6px; background:var(--bg2); }
+    .dot { width:8px; height:8px; border-radius:50%; background:#ccc; flex-shrink:0; }
     .dot.done  { background:#1D9E75; }
     .dot.error { background:#E24B4A; }
     .dot.busy  { background:#EF9F27; animation:pulse 1s infinite; }
@@ -49,9 +41,9 @@
     .fname   { font-size:13px; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .fstatus { font-size:11px; color:var(--text3); white-space:nowrap; }
 
-    .run-btn { width:100%; padding:11px; font-size:14px; font-weight:500; background:var(--text); color:var(--bg); border:none; border-radius:var(--radius-md); cursor:pointer; transition:opacity 0.15s; margin-top:4px; }
+    .run-btn { width:100%; padding:11px; font-size:14px; font-weight:500; background:var(--text); color:#fff; border:none; border-radius:var(--radius-md); cursor:pointer; transition:opacity 0.15s; margin-top:4px; }
     .run-btn:disabled { opacity:0.3; cursor:not-allowed; }
-    .run-btn:not(:disabled):hover { opacity:0.85; }
+    .run-btn:not(:disabled):hover { opacity:0.8; }
 
     .progress-wrap { margin:1rem 0; }
     .progress-label { font-size:12px; color:var(--text2); margin-bottom:6px; }
@@ -59,24 +51,30 @@
     .progress-fill  { height:100%; background:var(--text); border-radius:2px; transition:width 0.4s; }
 
     .summary-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:1rem 0; }
-    .stat { background:var(--bg2); border-radius:var(--radius-md); padding:12px; text-align:center; }
+    .stat { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-md); padding:12px; text-align:center; }
     .stat-label { font-size:11px; color:var(--text2); margin-bottom:4px; }
-    .stat-val   { font-size:22px; font-weight:500; }
+    .stat-val   { font-size:22px; font-weight:600; }
 
-    .result-card { border:0.5px solid var(--border); border-radius:var(--radius-lg); background:var(--bg); overflow:hidden; margin-bottom:10px; }
+    .result-card { border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--bg2); overflow:hidden; margin-bottom:10px; }
     .result-header { display:flex; align-items:center; gap:10px; padding:12px 14px; cursor:pointer; }
-    .result-header:hover { background:var(--bg2); }
+    .result-header:hover { background:var(--bg3); }
     .result-title { font-size:13px; font-weight:500; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .overall-pill { font-size:12px; font-weight:600; padding:4px 12px; border-radius:99px; flex-shrink:0; }
     .pill-high { background:var(--green-bg); color:var(--green-text); }
     .pill-mid  { background:var(--amber-bg); color:var(--amber-text); }
     .pill-low  { background:var(--red-bg);   color:var(--red-text); }
+    .pill-err  { background:var(--red-bg);   color:var(--red-text); }
     .chevron   { font-size:10px; color:var(--text3); transition:transform 0.2s; flex-shrink:0; }
     .chevron.open { transform:rotate(180deg); }
 
-    .result-body { border-top:0.5px solid var(--border); padding:14px 16px; display:none; }
+    .result-body { border-top:1px solid var(--border); padding:14px 16px; display:none; }
     .result-body.open { display:block; }
     .summary-text { font-size:12px; color:var(--text2); margin-bottom:14px; line-height:1.6; }
+
+    /* error box shown inside expanded card */
+    .error-box { background:var(--red-bg); border:1px solid #f0b8b8; border-radius:var(--radius-md); padding:12px 14px; margin-bottom:12px; }
+    .error-box .error-title { font-size:12px; font-weight:600; color:var(--red-text); margin-bottom:4px; }
+    .error-box .error-msg   { font-size:12px; color:var(--red-text); line-height:1.6; font-family:monospace; word-break:break-all; }
 
     .param-row { display:flex; align-items:center; gap:12px; padding:8px 10px; border-radius:var(--radius-md); margin-bottom:2px; }
     .param-row[data-level="high"] { background:var(--green-bg); }
@@ -102,12 +100,12 @@
     .tag-warn { background:var(--amber-bg); color:var(--amber-text); }
     .tag-err  { background:var(--red-bg);   color:var(--red-text); }
 
-    .dl-btn { width:100%; padding:9px; font-size:13px; font-weight:500; background:var(--text); color:var(--bg); border:none; border-radius:var(--radius-md); cursor:pointer; margin-top:14px; display:flex; align-items:center; justify-content:center; gap:6px; transition:opacity 0.15s; }
-    .dl-btn:hover:not(:disabled) { opacity:0.85; }
+    .dl-btn { width:100%; padding:9px; font-size:13px; font-weight:500; background:var(--text); color:#fff; border:none; border-radius:var(--radius-md); cursor:pointer; margin-top:14px; display:flex; align-items:center; justify-content:center; gap:6px; transition:opacity 0.15s; }
+    .dl-btn:hover:not(:disabled) { opacity:0.8; }
     .dl-btn:disabled { opacity:0.35; cursor:not-allowed; }
 
     .empty { text-align:center; padding:2.5rem; color:var(--text3); font-size:13px; }
-    .toast { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%); background:var(--text); color:var(--bg); font-size:13px; padding:9px 20px; border-radius:99px; opacity:0; transition:opacity 0.3s; pointer-events:none; white-space:nowrap; z-index:999; }
+    .toast { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%); background:var(--text); color:#fff; font-size:13px; padding:9px 20px; border-radius:99px; opacity:0; transition:opacity 0.3s; pointer-events:none; white-space:nowrap; z-index:999; }
     .toast.show { opacity:1; }
   </style>
 </head>
@@ -115,7 +113,7 @@
 <div class="container">
   <div class="page-header">
     <h1>Maths content QC tool</h1>
-    <p>Upload up to 15 DOCX files. Checks - Grammar, Facts, and User Intent.</p>
+    <p>Upload up to 15 DOCX files. Checks — Grammar, Facts, and User Intent.</p>
   </div>
 
   <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
@@ -145,14 +143,14 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const API_KEY = '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';
+const API_KEY = 'YOUR_ANTHROPIC_API_KEY_HERE';
 const PARAMS  = ['Grammar', 'Facts', 'User Intent'];
 let files = [], qcResults = [];
 
 const fileInput = document.getElementById('fileInput');
 const dropZone  = document.getElementById('dropZone');
 fileInput.addEventListener('change', e => loadFiles(Array.from(e.target.files)));
-dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.style.background='var(--bg2)'; });
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.style.background='var(--bg3)'; });
 dropZone.addEventListener('dragleave', ()  => { dropZone.style.background=''; });
 dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.style.background=''; loadFiles(Array.from(e.dataTransfer.files)); });
 
@@ -191,7 +189,7 @@ function pillClass(s)  { return 'pill-' + scoreLevel(s); }
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2800);
+  setTimeout(() => t.classList.remove('show'), 3000);
 }
 
 async function readDocx(file) {
@@ -201,33 +199,53 @@ async function readDocx(file) {
       try {
         const { value } = await mammoth.extractRawText({ arrayBuffer: e.target.result });
         resolve(value.slice(0, 3000));
-      } catch(err) { reject(err); }
+      } catch(err) { reject(new Error('Failed to read DOCX: ' + err.message)); }
     };
+    r.onerror = () => reject(new Error('FileReader failed'));
     r.readAsArrayBuffer(file);
   });
 }
 
 async function callClaude(prompt) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': API_KEY,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || 'API error ' + res.status);
+  let res;
+  try {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+  } catch(networkErr) {
+    throw new Error('Network error — could not reach Anthropic API. Check your internet connection. Detail: ' + networkErr.message);
   }
+
+  if (!res.ok) {
+    let errBody;
+    try { errBody = await res.json(); } catch(e) { errBody = {}; }
+    const msg = errBody.error?.message || 'Unknown API error';
+    const type = errBody.error?.type || '';
+    if (res.status === 401) throw new Error('Authentication failed (401) — your API key is invalid or missing. Check API_KEY in the code.');
+    if (res.status === 429) throw new Error('Rate limit hit (429) — too many requests. Wait a moment and try again.');
+    if (res.status === 400) throw new Error(`Bad request (400) — ${msg}`);
+    throw new Error(`API error ${res.status} [${type}]: ${msg}`);
+  }
+
   const data = await res.json();
-  return data.content.map(b => b.text || '').join('').replace(/```json|```/g, '').trim();
+  const raw = data.content.map(b => b.text || '').join('').replace(/```json|```/g, '').trim();
+
+  try {
+    return raw;
+  } catch(e) {
+    throw new Error('Claude returned an unexpected response format.');
+  }
 }
 
 async function analyseFile(text, filename) {
@@ -255,7 +273,13 @@ User Intent: check ALL of the following —
   3. Are the right keywords present that a student searching this topic would expect?
   4. Does the conclusion/summary align with what the title promised to teach?
 Keep each issue under 12 words. Empty array if no issues.`;
-  return JSON.parse(await callClaude(prompt));
+
+  const raw = await callClaude(prompt);
+  try {
+    return JSON.parse(raw);
+  } catch(e) {
+    throw new Error('Could not parse Claude response as JSON. Raw response: ' + raw.slice(0, 200));
+  }
 }
 
 async function runQC() {
@@ -277,16 +301,16 @@ async function runQC() {
     try {
       const text   = await readDocx(files[i]);
       const result = await analyseFile(text, files[i].name);
-      qcResults.push({ file: files[i], result, text });
+      qcResults.push({ file: files[i], result, text, error: null });
       setFileState(i, 'done', 'Done ✓');
       totalScore += result.overallScore;
       PARAMS.forEach(p => { totalIssues += (result.params[p]?.issues?.length || 0); });
-      renderResultCard(files[i].name, result, qcResults.length - 1);
+      renderResultCard(files[i].name, result, null, qcResults.length - 1);
     } catch(err) {
-      qcResults.push({ file: files[i], result: null, text: '' });
+      qcResults.push({ file: files[i], result: null, text: '', error: err.message });
       setFileState(i, 'error', 'Error');
-      renderErrorCard(files[i].name);
-      console.error(err);
+      renderResultCard(files[i].name, null, err.message, qcResults.length - 1);
+      console.error('[QC Error]', files[i].name, err);
     }
   }
 
@@ -301,7 +325,35 @@ async function runQC() {
   document.getElementById('runBtn').textContent = 'Re-run QC';
 }
 
-function renderResultCard(name, result, idx) {
+function renderResultCard(name, result, errorMsg, idx) {
+  const card = document.createElement('div');
+  card.className = 'result-card';
+
+  // error state
+  if (!result || errorMsg) {
+    card.innerHTML = `
+      <div class="result-header" onclick="toggleCard(${idx})">
+        <span class="result-title">${name}</span>
+        <span class="overall-pill pill-err">Error</span>
+        <span class="chevron" id="chev-${idx}">▼</span>
+      </div>
+      <div class="result-body" id="body-${idx}">
+        <div class="error-box">
+          <div class="error-title">What went wrong</div>
+          <div class="error-msg">${errorMsg || 'Unknown error. Check the browser console for more details.'}</div>
+        </div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.6;">
+          Common fixes:<br>
+          • Make sure your API key is correct in the code (replace <code>YOUR_ANTHROPIC_API_KEY_HERE</code>)<br>
+          • Check your internet connection<br>
+          • Make sure the DOCX file is not password-protected or corrupted
+        </p>
+      </div>`;
+    document.getElementById('results').appendChild(card);
+    return;
+  }
+
+  // success state
   const sc = result.overallScore;
   let paramsHtml = '';
   PARAMS.forEach(p => {
@@ -320,8 +372,6 @@ function renderResultCard(name, result, idx) {
       <div class="issues">${issuesHtml}</div>`;
   });
 
-  const card = document.createElement('div');
-  card.className = 'result-card';
   card.innerHTML = `
     <div class="result-header" onclick="toggleCard(${idx})">
       <span class="result-title">${name}</span>
@@ -335,13 +385,6 @@ function renderResultCard(name, result, idx) {
         ⬇ Download annotated DOCX
       </button>
     </div>`;
-  document.getElementById('results').appendChild(card);
-}
-
-function renderErrorCard(name) {
-  const card = document.createElement('div');
-  card.className = 'result-card';
-  card.innerHTML = `<div class="result-header"><span class="result-title">${name}</span><span class="overall-pill pill-low">Error</span></div>`;
   document.getElementById('results').appendChild(card);
 }
 
@@ -370,8 +413,8 @@ Generate specific inline comments. Respond ONLY with JSON:
 }
 3-8 comments. Anchor must be a verbatim substring from the text above. Only flag real issues.`;
 
-    const cJson = await callClaude(commentPrompt);
-    const { comments } = JSON.parse(cJson);
+    const cRaw = await callClaude(commentPrompt);
+    const { comments } = JSON.parse(cRaw);
 
     const arr = await file.arrayBuffer();
     const zip = await JSZip.loadAsync(arr);
@@ -423,8 +466,7 @@ Generate specific inline comments. Respond ONLY with JSON:
     const blob = await zip.generateAsync({ type: 'blob' });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
-    a.href     = url;
-    a.download = file.name.replace('.docx', '_QC.docx');
+    a.href = url; a.download = file.name.replace('.docx', '_QC.docx');
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
@@ -433,10 +475,10 @@ Generate specific inline comments. Respond ONLY with JSON:
     showToast('Annotated DOCX downloaded!');
 
   } catch(err) {
-    console.error(err);
+    console.error('[Download Error]', err);
     btn.textContent = '⬇ Download annotated DOCX';
     btn.disabled = false;
-    showToast('Error: ' + err.message);
+    showToast('Download failed: ' + err.message);
   }
 }
 </script>
